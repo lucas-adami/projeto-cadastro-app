@@ -5,6 +5,8 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  # allow manual runs from the Actions UI for debugging
+  workflow_dispatch:
 
 jobs:
   frontend:
@@ -38,6 +40,32 @@ jobs:
 
       - name: Install (frontend)
         run: yarn install --immutable --immutable-cache --check-cache
+
+      - name: Debug: environment and list tests
+        run: |
+          echo "--- node & yarn versions ---"
+          node --version
+          yarn -v
+          echo "--- repo files ---"
+          ls -la
+          echo "--- show package.json test script ---"
+          node -e "console.log(require('./package.json').scripts?.test)"
+          echo "--- list jest tests (non-failing) ---"
+          yarn test --listTests || true
+          echo "--- show jest.config.js (if present) ---"
+          if [ -f jest.config.js ]; then
+            echo "--- jest.config.js ---"
+            sed -n '1,200p' jest.config.js || true
+          else
+            echo "jest.config.js not found"
+          fi
+          echo "--- show jest.setup.js (if present) ---"
+          if [ -f jest.setup.js ]; then
+            echo "--- jest.setup.js ---"
+            sed -n '1,200p' jest.setup.js || true
+          else
+            echo "jest.setup.js not found"
+          fi
 
       - name: Run tests (frontend)
         run: yarn test --runInBand --coverage

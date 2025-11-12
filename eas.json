@@ -1,0 +1,46 @@
+{
+  "cli": {
+    "version": ">= 16.7.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        ".env": ".env"
+      }
+    },
+    "preview-local": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        ".env": ".env"
+      }
+    },
+    "preview-production": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "API_URL": "$API_URL_PROD",
+        "API_IA_URL": "$API_IA_URL_PROD",
+        "API_IA_KEY": "$API_IA_KEY_PROD"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "API_URL": "$API_URL_PROD",
+        "API_IA_URL": "$API_IA_URL_PROD",
+        "API_IA_KEY": "$API_IA_KEY_PROD"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

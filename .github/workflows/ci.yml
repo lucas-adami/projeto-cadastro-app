@@ -1,30 +1,34 @@
-name: CI
+name: Run App Tests
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ "**" ] # roda em qualquer branch
   pull_request:
-    branches: [ main, master ]
-  workflow_dispatch:
+    branches: [ "**" ]
+  workflow_dispatch: # permite rodar manualmente pelo Actions UI
 
 jobs:
-  frontend:
-    name: Frontend (Expo)
+  app-tests:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      # 1. Checkout do código
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      # 2. Configurar Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: 18
 
+      # 3. Ativar Corepack e preparar Yarn
       - name: Enable Corepack and prepare Yarn
         run: |
           corepack enable
-          corepack prepare yarn@4.10.0 --activate
+          corepack prepare yarn@stable --activate
 
+      # 4. Cache para Yarn (para acelerar builds)
       - name: Cache Yarn
         uses: actions/cache@v4
         with:
@@ -36,34 +40,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
 
-      - name: Install (frontend)
+      # 5. Instalar dependências
+      - name: Install dependencies
         run: yarn install --immutable --immutable-cache --check-cache
 
-      - name: Debug: environment and list tests
-        run: |
-          echo "--- node & yarn versions ---"
-          node --version
-          yarn -v
-          echo "--- repo files ---"
-          ls -la
-          echo "--- show package.json test script ---"
-          node -e "console.log(require('./package.json').scripts?.test)"
-          echo "--- list jest tests (non-failing) ---"
-          yarn test --listTests || true
-          echo "--- show jest.config.js (if present) ---"
-          if [ -f jest.config.js ]; then
-            echo "--- jest.config.js ---"
-            sed -n '1,200p' jest.config.js || true
-          else
-            echo "jest.config.js not found"
-          fi
-          echo "--- show jest.setup.js (if present) ---"
-          if [ -f jest.setup.js ]; then
-            echo "--- jest.setup.js ---"
-            sed -n '1,200p' jest.setup.js || true
-          else
-            echo "jest.setup.js not found"
-          fi
-
-      - name: Run tests (frontend)
+      # 6. Rodar testes com cobertura
+      - name: Run tests with coverage
         run: yarn test --runInBand --coverage
+
+      # 7. Upload do relatório de cobertura como artefato
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-coverage-report
+          path: coverage/

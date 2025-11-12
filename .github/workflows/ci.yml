@@ -2,33 +2,29 @@ name: Run App Tests
 
 on:
   push:
-    branches: [ "**" ] # roda em qualquer branch
+    branches: [ "**" ]
   pull_request:
     branches: [ "**" ]
-  workflow_dispatch: # permite rodar manualmente pelo Actions UI
+  workflow_dispatch:
 
 jobs:
   app-tests:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout do código
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Configurar Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      # 3. Ativar Corepack e preparar Yarn
       - name: Enable Corepack and prepare Yarn
         run: |
           corepack enable
           corepack prepare yarn@stable --activate
 
-      # 4. Cache para Yarn (para acelerar builds)
       - name: Cache Yarn
         uses: actions/cache@v4
         with:
@@ -40,17 +36,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
 
-      # 5. Instalar dependências
       - name: Install dependencies
         run: yarn install --immutable --immutable-cache --check-cache
 
-      # 6. Rodar testes com cobertura
       - name: Run tests with coverage
         run: yarn test --runInBand --coverage
 
-      # 7. Upload do relatório de cobertura como artefato
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
-          name: app-coverage-report
+          name: coverage-report
           path: coverage/

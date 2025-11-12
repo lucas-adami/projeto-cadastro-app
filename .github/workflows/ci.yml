@@ -22,7 +22,8 @@ jobs:
       - name: Enable Corepack and prepare Yarn
         run: |
           corepack enable
-          corepack prepare yarn@stable --activate
+          # Pin yarn to the repo's packageManager version to avoid mismatch on runners
+          corepack prepare yarn@4.10.0 --activate
 
       - name: Cache Yarn
         uses: actions/cache@v4
@@ -36,7 +37,7 @@ jobs:
             ${{ runner.os }}-yarn-
 
       - name: Install (frontend)
-        run: yarn install --immutable --immutable-cache
+        run: yarn install --immutable --immutable-cache --check-cache
 
       - name: Run tests (frontend)
         run: yarn test --runInBand --coverage

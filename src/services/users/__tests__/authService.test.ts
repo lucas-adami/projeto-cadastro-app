@@ -19,14 +19,14 @@ describe("AuthService", () => {
   });
 
   describe("login", () => {
-    it("deve retornar token quando login é bem-sucedido", async () => {
+    it("deve retornar objeto com token quando login é bem-sucedido", async () => {
       // Arrange
       const email = "test@example.com";
       const senha = "password123";
       const expectedToken = "fake-jwt-token";
 
       mockedApi.post.mockResolvedValue({
-        data: { token: expectedToken },
+        data: { token: expectedToken, user: { id: 1, name: "Test User" } },
       });
 
       // Act
@@ -37,20 +37,19 @@ describe("AuthService", () => {
         email,
         senha,
       });
-      expect(result).toBe(expectedToken);
+      expect(result).toHaveProperty("token", expectedToken);
+      expect(result.user).toBeDefined();
+      expect(result.user.id).toBe(1);
+      expect(result.user.name).toBe("Test User");
     });
 
     it("deve lançar erro quando login falha", async () => {
-      // Arrange
       const email = "test@example.com";
       const senha = "wrongpassword";
 
       mockedApi.post.mockRejectedValue(new Error("Credenciais inválidas"));
 
-      // Act & Assert
-      await expect(login(email, senha)).rejects.toThrow(
-        "Credenciais inválidas"
-      );
+      await expect(login(email, senha)).rejects.toThrow("Credenciais inválidas");
       expect(mockedApi.post).toHaveBeenCalledWith("/auth/login", {
         email,
         senha,
@@ -58,18 +57,15 @@ describe("AuthService", () => {
     });
 
     it("deve fazer chamada com parâmetros corretos", async () => {
-      // Arrange
       const email = "user@test.com";
       const senha = "mypassword";
 
       mockedApi.post.mockResolvedValue({
-        data: { token: "some-token" },
+        data: { token: "some-token", user: { id: 2, name: "User Test" } },
       });
 
-      // Act
       await login(email, senha);
 
-      // Assert
       expect(mockedApi.post).toHaveBeenCalledTimes(1);
       expect(mockedApi.post).toHaveBeenCalledWith("/auth/login", {
         email,
@@ -80,7 +76,6 @@ describe("AuthService", () => {
 
   describe("getForgetPasswordToken", () => {
     it("deve retornar token quando esqueci senha é bem-sucedido", async () => {
-      // Arrange
       const email = "test@example.com";
       const expectedToken = "reset-token-123";
 
@@ -88,10 +83,8 @@ describe("AuthService", () => {
         data: { token: expectedToken },
       });
 
-      // Act
       const result = await getForgetPasswordToken(email);
 
-      // Assert
       expect(mockedApi.post).toHaveBeenCalledWith("/auth/esqueceu-senha", {
         email,
       });
@@ -99,29 +92,22 @@ describe("AuthService", () => {
     });
 
     it("deve lançar erro quando email não existe", async () => {
-      // Arrange
       const email = "nonexistent@example.com";
 
       mockedApi.post.mockRejectedValue(new Error("Email não encontrado"));
 
-      // Act & Assert
-      await expect(getForgetPasswordToken(email)).rejects.toThrow(
-        "Email não encontrado"
-      );
+      await expect(getForgetPasswordToken(email)).rejects.toThrow("Email não encontrado");
     });
 
     it("deve fazer chamada com email correto", async () => {
-      // Arrange
       const email = "valid@email.com";
 
       mockedApi.post.mockResolvedValue({
         data: { token: "token123" },
       });
 
-      // Act
       await getForgetPasswordToken(email);
 
-      // Assert
       expect(mockedApi.post).toHaveBeenCalledTimes(1);
       expect(mockedApi.post).toHaveBeenCalledWith("/auth/esqueceu-senha", {
         email,
@@ -131,7 +117,6 @@ describe("AuthService", () => {
 
   describe("compareCode", () => {
     it("deve retornar dados quando código é válido", async () => {
-      // Arrange
       const code = "123456";
       const expectedData = { valid: true, message: "Código válido" };
 
@@ -139,10 +124,8 @@ describe("AuthService", () => {
         data: expectedData,
       });
 
-      // Act
       const result = await compareCode(code);
 
-      // Assert
       expect(mockedApi.post).toHaveBeenCalledWith("/auth/verifica-reset-code", {
         code,
       });
@@ -150,27 +133,22 @@ describe("AuthService", () => {
     });
 
     it("deve retornar erro quando código é inválido", async () => {
-      // Arrange
       const code = "invalid-code";
 
       mockedApi.post.mockRejectedValue(new Error("Código inválido"));
 
-      // Act & Assert
       await expect(compareCode(code)).rejects.toThrow("Código inválido");
     });
 
     it("deve fazer chamada com código correto", async () => {
-      // Arrange
       const code = "987654";
 
       mockedApi.post.mockResolvedValue({
         data: { valid: true },
       });
 
-      // Act
       await compareCode(code);
 
-      // Assert
       expect(mockedApi.post).toHaveBeenCalledTimes(1);
       expect(mockedApi.post).toHaveBeenCalledWith("/auth/verifica-reset-code", {
         code,
@@ -178,7 +156,6 @@ describe("AuthService", () => {
     });
 
     it("deve lidar com diferentes tipos de resposta", async () => {
-      // Arrange
       const code = "111111";
       const responseData = {
         valid: false,
@@ -190,10 +167,8 @@ describe("AuthService", () => {
         data: responseData,
       });
 
-      // Act
       const result = await compareCode(code);
 
-      // Assert
       expect(result).toEqual(responseData);
       expect(result.valid).toBe(false);
       expect(result.message).toBe("Código expirado");
